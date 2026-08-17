@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Admin Control XraxzzSpam</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    /* ===== RESET & BASE ===== */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; font-family: Inter, system-ui, Arial, sans-serif; color: #fff; background: #030812; }
+    body { background-image: linear-gradient(rgba(2,7,17,.7), rgba(2,7,17,.9)), url("https://files.catbox.moe/l6geq6.jpeg"); background-size: cover; background-position: center; background-attachment: fixed; }
+    button, input, textarea { font: inherit; }
+    .hidden { display: none !important; }
+    .app { width: min(700px, 100%); margin: auto; padding: 15px 14px 105px; }
+    .glass { background: rgba(7,19,37,.82); backdrop-filter: blur(22px); border: 1px solid rgba(38,151,235,.32); box-shadow: 0 18px 60px rgba(0,0,0,.42); }
+    .bubble { border-radius: 30px; }
+    .btn { border: 1px solid #24a8ff; border-radius: 20px; padding: 14px 18px; color: #fff; background: linear-gradient(105deg, #087fff, #1763ff, #00baff); font-weight: 900; cursor: pointer; overflow: hidden; position: relative; display: inline-block; text-align: center; transition: .25s; }
+    .btn:active { transform: scale(.97); }
+    .btn::after { content: ""; position: absolute; inset: 0 auto 0 -45%; width: 28%; background: rgba(255,255,255,.5); transform: skewX(-22deg); animation: shine 2.1s linear infinite; }
+    @keyframes shine { 0% { left: -45%; } 55%,100% { left: 130%; } }
+    .wide { width: 100%; }
+    .btn-sm { padding: 8px 14px; font-size: 11px; }
+    .btn-danger { background: linear-gradient(105deg, #e74c3c, #c0392b, #e74c3c); border-color: #e74c3c; }
+    .btn-success { background: linear-gradient(105deg, #2ecc71, #27ae60, #2ecc71); border-color: #2ecc71; }
+    .btn-warning { background: linear-gradient(105deg, #f39c12, #e67e22, #f39c12); border-color: #f39c12; }
+    .header { height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 4px; }
+    .brand { font-size: 22px; font-weight: 1000; letter-spacing: .5px; }
+    .brand i { color: #4bc7ff; margin-right: 10px; }
+    .card { padding: 18px; margin: 12px 0; border-radius: 24px; background: rgba(7,19,37,.82); backdrop-filter: blur(22px); border: 1px solid rgba(38,151,235,.32); box-shadow: 0 18px 60px rgba(0,0,0,.42); }
+    .card h2 { font-size: 18px; margin-bottom: 12px; }
+    .card h2 i { margin-right: 10px; color: #4bc7ff; }
+    .sub { color: #8ea5bf; font-size: 13px; line-height: 1.5; }
+    .input { width: 100%; padding: 14px; border: 1px solid #294c6b; background: #061322; color: #fff; border-radius: 16px; outline: 0; transition: .25s; }
+    .input:focus { border-color: #26aaff; }
+    .field { margin: 10px 0; }
+    .field label { display: block; font-size: 12px; color: #91a8c0; margin-bottom: 6px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .status { margin-top: 8px; font-size: 12px; color: #8ea5bf; min-height: 20px; }
+    .user-list { margin-top: 10px; max-height: 400px; overflow-y: auto; }
+    .user-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid #1a3a5a; }
+    .user-item .uname { font-weight: 700; font-size: 14px; }
+    .user-item .ubadge { font-size: 10px; padding: 2px 10px; border-radius: 20px; margin-left: 8px; }
+    .user-item .ubadge.banned { background: #e74c3c; color: #fff; }
+    .user-item .ubadge.active { background: #2ecc71; color: #000; }
+    .user-item .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .user-item .actions button { padding: 4px 12px; border-radius: 14px; border: none; font-size: 10px; font-weight: 700; cursor: pointer; transition: .2s; }
+    .user-item .actions button:active { transform: scale(.95); }
+    .btn-sm-ban { background: #e74c3c; color: #fff; }
+    .btn-sm-unban { background: #2ecc71; color: #000; }
+    .btn-sm-delete { background: #c0392b; color: #fff; }
+    .toast { position: fixed; z-index: 100; left: 50%; bottom: 90px; transform: translate(-50%, 20px); opacity: 0; transition: .25s; padding: 12px 16px; border-radius: 15px; background: #0b2d4d; border: 1px solid #268fd1; color: #fff; pointer-events: none; }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .loader { display: inline-block; width: 24px; height: 24px; border: 3px solid rgba(46,204,113,.2); border-top-color: #46baff; border-radius: 50%; animation: spin .8s linear infinite; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    @media (max-width: 480px) { .grid-2 { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<main class="app">
+  <!-- HEADER -->
+  <header class="header">
+    <div class="brand"><i class="fas fa-shield-alt"></i>Admin Control</div>
+    <div style="display:flex;gap:12px;align-items:center;">
+      <span id="clock" style="font-size:12px;color:#8ea5bf;">--:--:--</span>
+      <span id="statusIndicator" style="font-size:12px;color:#2ecc71;"><i class="fas fa-circle"></i> Online</span>
+    </div>
+  </header>
+
+  <!-- INFO -->
+  <div class="card">
+    <h2><i class="fas fa-database"></i> Kontrol XraxzzSpam</h2>
+    <p class="sub">Kelola akun, maintenance, dan notifikasi. Semua data tersimpan di Firebase Realtime Database.</p>
+  </div>
+
+  <!-- GRID: Buat & Hapus Akun -->
+  <div class="grid-2">
+    <div class="card">
+      <h2><i class="fas fa-user-plus"></i> Buat Akun</h2>
+      <div class="field"><label>Username</label><input id="newUsername" class="input" placeholder="username"></div>
+      <div class="field"><label>Password</label><input id="newPassword" class="input" type="password" placeholder="password"></div>
+      <button class="btn wide btn-success" onclick="createUser()"><i class="fas fa-plus"></i> Buat Akun</button>
+      <div id="createStatus" class="status"></div>
+    </div>
+    <div class="card">
+      <h2><i class="fas fa-user-minus"></i> Hapus Akun</h2>
+      <div class="field"><label>Username</label><input id="deleteUsername" class="input" placeholder="username"></div>
+      <button class="btn wide btn-danger" onclick="deleteUser()"><i class="fas fa-trash"></i> Hapus Akun</button>
+      <div id="deleteStatus" class="status"></div>
+    </div>
+  </div>
+
+  <!-- MAINTENANCE -->
+  <div class="card">
+    <h2><i class="fas fa-tools"></i> Maintenance</h2>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="btn btn-warning" style="flex:1;" onclick="setMaintenance(true)"><i class="fas fa-play"></i> ON</button>
+      <button class="btn" style="flex:1;" onclick="setMaintenance(false)"><i class="fas fa-stop"></i> OFF</button>
+    </div>
+    <div class="field"><label>Alasan (opsional)</label><input id="maintenanceReason" class="input" placeholder="Alasan pemeliharaan..."></div>
+    <div id="maintenanceStatus" class="status">Status: <span id="maintStatusText">Normal</span></div>
+  </div>
+
+  <!-- NOTIFIKASI -->
+  <div class="card">
+    <h2><i class="fas fa-bell"></i> Kirim Notifikasi</h2>
+    <div class="field"><label>Judul</label><input id="notifTitle" class="input" placeholder="Judul notifikasi"></div>
+    <div class="field"><label>Pesan</label><textarea id="notifMessage" class="input" rows="3" placeholder="Isi pesan..."></textarea></div>
+    <div class="field"><label>URL Gambar (opsional)</label><input id="notifImage" class="input" placeholder="https://..."></div>
+    <button class="btn wide" onclick="sendNotification()"><i class="fas fa-paper-plane"></i> Kirim ke Semua User</button>
+    <div id="notifStatus" class="status"></div>
+  </div>
+
+  <!-- DAFTAR USER -->
+  <div class="card">
+    <h2><i class="fas fa-users"></i> Daftar User</h2>
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+      <button class="btn btn-sm" onclick="loadUsers()"><i class="fas fa-sync"></i> Refresh</button>
+      <span style="color:#8ea5bf;font-size:12px;align-self:center;" id="userCount">0 user</span>
+    </div>
+    <div id="userList" class="user-list">
+      <div class="sub" style="text-align:center;padding:20px 0;"><div class="loader"></div> Memuat...</div>
+    </div>
+  </div>
+</main>
+
+<!-- TOAST -->
+<div id="toast" class="toast"></div>
+
+<script>
+  // ===== UTILITY =====
+  const $ = id => document.getElementById(id);
+  const toast = msg => {
+    const el = $('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(el._timer);
+    el._timer = setTimeout(() => el.classList.remove('show'), 2200);
+  };
+
+  // ===== CLOCK =====
+  setInterval(() => {
+    $('clock').textContent = new Date().toLocaleTimeString('id-ID');
+  }, 1000);
+
+  // ===== FIREBASE =====
+  let firebaseReady = false;
+  let allUsers = {};
+  let userListener = null;
+
+  window.addEventListener('fbready', () => {
+    firebaseReady = true;
+    console.log('Admin Control: Firebase siap!');
+    loadUsers();
+    loadMaintenanceStatus();
+  });
+
+  // ===== LOAD USERS (realtime) =====
+  function loadUsers() {
+    if (!firebaseReady) {
+      $('userList').innerHTML = '<div class="sub" style="text-align:center;padding:20px 0;">Menunggu koneksi Firebase...</div>';
+      return;
+    }
+    $('userList').innerHTML = '<div class="sub" style="text-align:center;padding:20px 0;"><div class="loader"></div> Memuat...</div>';
+    // Hentikan listener lama jika ada
+    if (userListener) {
+      userListener();
+      userListener = null;
+    }
+    const userRef = window.FB.ref(window.FB.db, 'users');
+    userListener = window.FB.onValue(userRef, snap => {
+      const data = snap.val() || {};
+      allUsers = data;
+      renderUsers(data);
+    });
+  }
+
+  function renderUsers(data) {
+    const container = $('userList');
+    const keys = Object.keys(data);
+    $('userCount').textContent = keys.length + ' user';
+    if (!keys.length) {
+      container.innerHTML = '<div class="sub" style="text-align:center;padding:20px 0;">Belum ada akun.</div>';
+      return;
+    }
+    let html = '';
+    keys.forEach(key => {
+      const user = data[key];
+      const banned = user.banned || false;
+      const isAdmin = user.isAdmin || false;
+      html += `
+        <div class="user-item">
+          <div>
+            <span class="uname">${key}</span>
+            <span class="ubadge ${banned ? 'banned' : 'active'}">${banned ? 'BANNED' : 'Aktif'}</span>
+            ${isAdmin ? '<span class="ubadge" style="background:#4bc7ff;color:#000;">Admin</span>' : ''}
+          </div>
+          <div class="actions">
+            <button class="${banned ? 'btn-sm-unban' : 'btn-sm-ban'}" onclick="${banned ? 'unbanUser' : 'banUser'}('${key}')">
+              ${banned ? '<i class="fas fa-check"></i> Unban' : '<i class="fas fa-ban"></i> Ban'}
+            </button>
+            <button class="btn-sm-delete" onclick="deleteUserByKey('${key}')"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+      `;
+    });
+    container.innerHTML = html;
+  }
+
+  // ===== CREATE USER =====
+  function createUser() {
+    const username = $('newUsername').value.trim();
+    const password = $('newPassword').value.trim();
+    const status = $('createStatus');
+    if (!username || !password) {
+      status.textContent = 'Isi username dan password.';
+      return;
+    }
+    if (!firebaseReady) {
+      status.textContent = 'Menunggu koneksi Firebase...';
+      return;
+    }
+    status.textContent = 'Menyimpan...';
+    const userRef = window.FB.ref(window.FB.db, 'users/' + username);
+    window.FB.get(userRef).then(snap => {
+      if (snap.exists()) {
+        status.textContent = '❌ Username sudah digunakan.';
+        return;
+      }
+      return window.FB.set(userRef, {
+        username: username,
+        password: password,
+        banned: false,
+        isAdmin: false,
+        createdAt: Date.now()
+      });
+    }).then(() => {
+      status.textContent = '✅ Akun ' + username + ' berhasil dibuat!';
+      $('newUsername').value = '';
+      $('newPassword').value = '';
+      loadUsers();
+      toast('Akun ' + username + ' dibuat!');
+    }).catch(err => {
+      status.textContent = '❌ Error: ' + err.message;
+    });
+  }
+
+  // ===== DELETE USER (by username input) =====
+  function deleteUser() {
+    const username = $('deleteUsername').value.trim();
+    const status = $('deleteStatus');
+    if (!username) {
+      status.textContent = 'Masukkan username.';
+      return;
+    }
+    if (!firebaseReady) {
+      status.textContent = 'Menunggu koneksi Firebase...';
+      return;
+    }
+    if (!confirm('Hapus akun "' + username + '" secara permanen?')) return;
+    status.textContent = 'Menghapus...';
+    window.FB.remove(window.FB.ref(window.FB.db, 'users/' + username))
+      .then(() => {
+        status.textContent = '✅ Akun ' + username + ' dihapus.';
+        $('deleteUsername').value = '';
+        loadUsers();
+        toast('Akun ' + username + ' dihapus.');
+      })
+      .catch(err => {
+        status.textContent = '❌ Error: ' + err.message;
+      });
+  }
+
+  // ===== DELETE USER (from list) =====
+  function deleteUserByKey(username) {
+    if (!confirm('Hapus akun "' + username + '" secara permanen?')) return;
+    if (!firebaseReady) return;
+    window.FB.remove(window.FB.ref(window.FB.db, 'users/' + username))
+      .then(() => {
+        loadUsers();
+        toast('Akun ' + username + ' dihapus.');
+      })
+      .catch(err => toast('Error: ' + err.message));
+  }
+
+  // ===== BAN / UNBAN =====
+  function banUser(username) {
+    if (!firebaseReady) return;
+    if (!confirm('Ban akun "' + username + '"?')) return;
+    window.FB.update(window.FB.ref(window.FB.db, 'users/' + username), { banned: true })
+      .then(() => { loadUsers(); toast(username + ' dibanned.'); })
+      .catch(err => toast('Error: ' + err.message));
+  }
+
+  function unbanUser(username) {
+    if (!firebaseReady) return;
+    window.FB.update(window.FB.ref(window.FB.db, 'users/' + username), { banned: false })
+      .then(() => { loadUsers(); toast(username + ' di-unban.'); })
+      .catch(err => toast('Error: ' + err.message));
+  }
+
+  // ===== MAINTENANCE =====
+  function setMaintenance(active) {
+    if (!firebaseReady) {
+      toast('Menunggu koneksi Firebase...');
+      return;
+    }
+    const reason = $('maintenanceReason').value.trim() || 'Sedang perbaikan';
+    window.FB.set(window.FB.ref(window.FB.db, 'admin/maintenance'), {
+      active: active,
+      reason: reason,
+      updated: Date.now()
+    }).then(() => {
+      loadMaintenanceStatus();
+      toast('Maintenance ' + (active ? 'ON' : 'OFF'));
+    }).catch(err => toast('Error: ' + err.message));
+  }
+
+  function loadMaintenanceStatus() {
+    if (!firebaseReady) return;
+    window.FB.onValue(window.FB.ref(window.FB.db, 'admin/maintenance'), snap => {
+      const data = snap.val();
+      const el = $('maintStatusText');
+      if (data && data.active) {
+        el.textContent = '🛠️ ON - ' + (data.reason || 'Perbaikan');
+        el.style.color = '#f39c12';
+      } else {
+        el.textContent = '✅ Normal';
+        el.style.color = '#2ecc71';
+      }
+    });
+  }
+
+  // ===== SEND NOTIFICATION =====
+  function sendNotification() {
+    const title = $('notifTitle').value.trim() || 'Notifikasi';
+    const message = $('notifMessage').value.trim();
+    const image = $('notifImage').value.trim();
+    const status = $('notifStatus');
+    if (!message) {
+      status.textContent = 'Isi pesan notifikasi.';
+      return;
+    }
+    if (!firebaseReady) {
+      status.textContent = 'Menunggu koneksi Firebase...';
+      return;
+    }
+    status.textContent = 'Mengirim...';
+    window.FB.push(window.FB.ref(window.FB.db, 'notifications'), {
+      title: title,
+      message: message,
+      image: image || '',
+      timestamp: Date.now()
+    }).then(() => {
+      status.textContent = '✅ Notifikasi terkirim!';
+      $('notifTitle').value = '';
+      $('notifMessage').value = '';
+      $('notifImage').value = '';
+      toast('Notifikasi terkirim ke semua user!');
+    }).catch(err => {
+      status.textContent = '❌ Error: ' + err.message;
+    });
+  }
+
+  // ================================================================
+  // FIREBASE MODULE
+  // ================================================================
+</script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getDatabase, ref, get, set, update, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+  import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDnpxy3KFcssy8pWvz3UCTtHApPS22fNgU",
+    authDomain: "raxzz-project.firebaseapp.com",
+    databaseURL: "https://raxzz-project-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "raxzz-project",
+    storageBucket: "raxzz-project.firebasestorage.app",
+    messagingSenderId: "631055650268",
+    appId: "1:631055650268:web:fa220f02282b607a225319"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const auth = getAuth(app);
+  await signInAnonymously(auth).catch(() => {});
+
+  window.FB = { db, ref, get, set, update, push, onValue, remove };
+  window.dispatchEvent(new Event('fbready'));
+</script>
+
+</body>
+</html>
